@@ -30,13 +30,20 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const AllResultsPage(title: '死守す一分'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+class ResultItem {
+  ResultItem(this.targetDuration, this.actualDuration);
+
+  Duration targetDuration;
+  Duration actualDuration;
+}
+
+class AllResultsPage extends StatefulWidget {
+  const AllResultsPage({super.key, required this.title});
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -50,12 +57,13 @@ class MyHomePage extends StatefulWidget {
   final String title;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<AllResultsPage> createState() => _AllResultsPageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _AllResultsPageState extends State<AllResultsPage> {
+  /*  int _counter = 0;
 
+  
   void _incrementCounter() {
     setState(() {
       // This call to setState tells the Flutter framework that something has
@@ -65,7 +73,62 @@ class _MyHomePageState extends State<MyHomePage> {
       // called again, and so nothing would appear to happen.
       _counter++;
     });
+  }*/
+
+  List<ResultItem> durations = [
+    //サンプルデータ
+    ResultItem(
+      Duration(minutes: 4, seconds: 40),
+      Duration(minutes: 5, seconds: 20),
+    ),
+    ResultItem(
+      Duration(minutes: 3, seconds: 21),
+      Duration(minutes: 2, seconds: 34),
+    ), // 任意に増やしてOK
+    ResultItem(
+      Duration(minutes: 3, seconds: 21),
+      Duration(minutes: 4, seconds: 10),
+    ),
+  ];
+
+  String taskName = "タスク名";
+
+  String formatDuration(Duration duration) {
+    //時間の文字列を整形
+    String toTwoDigits(int n) => n.toString().padLeft(2, "0");
+    String ho = toTwoDigits(duration.inHours.remainder(60).abs());
+    String min = toTwoDigits(duration.inMinutes.remainder(60).abs());
+    String sec = toTwoDigits(duration.inSeconds.remainder(60).abs());
+
+    return (duration.inSeconds < 0) ? "-$ho:$min:$sec" : " $ho:$min:$sec";
   }
+
+  //  Widget Minus
+
+  /*
+  String durationDiff(Duration a, Duration b) {
+    //時間の差分を計算，整形
+
+      bool isMinus = false;
+      if(a.inHours - b.inHours < 0){
+        isMinus = true;
+      }else{
+
+      }
+        if(a.inMinutes - b.inMinutes < 0){
+          isMinus = true;
+          if(a.inSeconds - b.inSeconds < 0){
+            isMinus = true;
+          }
+        }
+      }
+
+      days: a.inHours - b.inHours,
+      minutes: a.inMinutes - b.inMinutes,
+      seconds: a.inSeconds - b.inSeconds,
+    
+    return formatDuration(diff);
+  }*/
 
   @override
   Widget build(BuildContext context) {
@@ -83,11 +146,18 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        title: Text(
+          widget.title,
+          style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+          textAlign: TextAlign.center,
+        ),
       ),
+
       body: Center(
         // Center is a layout widget. It takes a single child and positions it
         // in the middle of the parent.
+        //  child: Align(
+        // alignment: Alignment.centerRight,
         child: Column(
           // Column is also a layout widget. It takes a list of children and
           // arranges them vertically. By default, it sizes itself to fit its
@@ -102,21 +172,93 @@ class _MyHomePageState extends State<MyHomePage> {
           // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
           // action in the IDE, or press "p" in the console), to see the
           // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
+          //  crossAxisAlignment: CrossAxisAlignment.end,
           children: <Widget>[
-            const Text('You have pushed the button this many times:'),
             Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+              "[$taskName]の計測履歴：",
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 30.0),
+            ),
+            ListView.builder(
+              shrinkWrap: true,
+              itemCount: durations.length,
+              itemBuilder: (BuildContext context, index) {
+                Duration target = durations[index].targetDuration;
+                Duration actual = durations[index].actualDuration;
+                Widget durationDiff =
+                    ((target - actual).inSeconds < 0) //負になっていれば赤文字にする
+                    ? Text(
+                        "差分\n${formatDuration(target - actual)}",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 16, color: Colors.red),
+                      )
+                    : Text(
+                        "差分\n${formatDuration(target - actual)}",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 16),
+                      );
+                return Container(
+                  color: Colors.grey[700],
+                  child: Container(
+                    color: Colors.white,
+                    margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: <Widget>[
+                        Text(
+                          "目標時間\n${formatDuration(target)}",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 16),
+                        ),
+                        Spacer(),
+                        Text(
+                          "実際の時間\n${formatDuration(actual)}",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 16),
+                        ),
+                        Spacer(),
+                        durationDiff,
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+            SizedBox(height: 50),
+            ElevatedButton(
+              onPressed: () {
+                /*
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => StartPage()),
+                );*/
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text(
+                "スタート画面へ戻る",
+                style: TextStyle(fontSize: 20, color: Colors.white),
+              ),
             ),
           ],
+          /*
+            children: <Widget>[
+              const Text('You have pushed the button this many times:'),
+              Text(
+                '$_counter',
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+            ],*/
         ),
+        // ),
       ),
+      /*
       floatingActionButton: FloatingActionButton(
         onPressed: _incrementCounter,
         tooltip: 'Increment',
         child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ), // This trailing comma makes auto-formatting nicer for build methods. This trailing comma makes auto-formatting nicer for build methods.
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,*/
     );
   }
 }

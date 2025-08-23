@@ -1,3 +1,4 @@
 {
-  "dart.flutterSdkPath": ".fvm/versions/3.32.4"
+  "dart.flutterSdkPath": "~/development/flutter/bin",
+  "cmake.sourceDirectory": "/home/monda/jack/onemin_front/linux/flutter"
 }
