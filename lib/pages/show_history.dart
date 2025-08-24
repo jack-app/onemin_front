@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         fontFamily: "NotoSansJP", //中華っぽいフォントが嫌なのでとりあえず設定した
       ),
-      home: const AllResultsPage(title: '死守す一分'),
+      home: const ShowHistoryPage(title: '死守す一分'),
     );
   }
 }
@@ -28,16 +28,16 @@ class ResultItem {
   Duration actualDuration;
 }
 
-class AllResultsPage extends StatefulWidget {
-  const AllResultsPage({super.key, required this.title});
+class ShowHistoryPage extends StatefulWidget {
+  const ShowHistoryPage({super.key, required this.title});
 
   final String title;
 
   @override
-  State<AllResultsPage> createState() => _AllResultsPageState();
+  State<ShowHistoryPage> createState() => _ShowHistoryPageState();
 }
 
-class _AllResultsPageState extends State<AllResultsPage> {
+class _ShowHistoryPageState extends State<ShowHistoryPage> {
   List<ResultItem> durations = [
     //計測履歴のサンプルデータ
     ResultItem(
@@ -114,7 +114,7 @@ class _AllResultsPageState extends State<AllResultsPage> {
     ),
   ];
 
-  String taskName = "タスク名"; //タスク名のサンプルデータ
+  String taskName = "\$タスク名"; //タスク名のサンプルデータ
 
   String formatDuration(Duration duration) {
     //Durationを文字列に整形する関数
@@ -131,8 +131,7 @@ class _AllResultsPageState extends State<AllResultsPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          //タイトル："死守す一分"
-          widget.title,
+          "死守す一分",
           style: TextStyle(
             fontFamily: "NotoSansJP",
             fontSize: 30,
