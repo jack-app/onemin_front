@@ -1,9 +1,19 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class NotificationTimerPage extends StatelessWidget{
+  final player = AudioPlayer();
+
+  final audioSourceUrl = 'lib/notification/alarm.mp3';
+  void playSound() async {
+    await player.play(AssetSource('lib/notification/alarm.mp3'));
+  }
+
   // 前略
   void activateNotificationTimer({int minutes = 0, int seconds = 0}) {
     // ここに通知を設定するコードを追加
+    playSound();
   }
 
   // 中略
