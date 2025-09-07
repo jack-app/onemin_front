@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'notification/notification.dart';
 
 void main() {
   runApp(const MyApp());
@@ -109,6 +110,19 @@ class _MyHomePageState extends State<MyHomePage> {
               '$_counter',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
+
+            //////// 以下を追加
+            ElevatedButton(
+              onPressed: () {
+                // Navigate to a new screen when the button is pressed
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => NotificationTimerPage()),  // start.dartに class StartPage extend なんちゃら… として実装されている場合の例
+                );
+              },
+              child: const Text('Go to Start'),
+            ),
+            //////// ここまで
           ],
         ),
       ),
