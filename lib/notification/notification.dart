@@ -13,7 +13,9 @@ class NotificationTimerPage extends StatelessWidget{
   // 前略
   void activateNotificationTimer({int minutes = 0, int seconds = 0}) {
     // ここに通知を設定するコードを追加
-    playSound();
+    Timer(Duration(seconds: seconds, minutes: minutes), () {
+      playSound();
+    });
   }
 
   // 中略
