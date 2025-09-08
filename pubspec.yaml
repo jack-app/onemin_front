@@ -89,4 +89,4 @@ flutter:
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
   assets:
-    - lib/notification/alarm.mp3
+    - assets/alarm.mp3

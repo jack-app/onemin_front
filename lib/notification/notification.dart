@@ -6,8 +6,8 @@ class NotificationTimerPage extends StatelessWidget{
   final player = AudioPlayer();
 
   final audioSourceUrl = 'lib/notification/alarm.mp3';
-  void playSound() async {
-    await player.play(AssetSource('lib/notification/alarm.mp3'));
+  Future<void> playSound() async {
+    await player.play(AssetSource('alarm.mp3'));
   }
 
   // 前略
