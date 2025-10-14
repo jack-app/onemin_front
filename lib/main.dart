@@ -1,5 +1,18 @@
 import 'package:flutter/material.dart';
-import 'schedule_creation_screen.dart'; // 予定作成画面をインポート
+import 'measurement_start_screen.dart';
+
+// Scheduleクラスに開始・終了時刻のプロパティを追加
+class Schedule {
+  final String title;
+  final TimeOfDay startTime;
+  final TimeOfDay endTime;
+
+  Schedule({
+    required this.title,
+    required this.startTime,
+    required this.endTime,
+  });
+}
 
 void main() {
   runApp(const MyApp());
@@ -11,13 +24,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'OneMin App',
+      title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      // アプリの開始画面として予定作成画面を指定
-      home: const ScheduleCreationScreen(),
+      home: const MeasurementStartScreen(),
     );
   }
 }
+

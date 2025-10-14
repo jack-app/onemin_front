@@ -1,85 +1,78 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // 時刻のフォーマットに使用
-
-// 予定データを保持するためのシンプルなクラス
-class Schedule {
-  final String name;
-  final int targetTime;
-
-  Schedule({required this.name, required this.targetTime});
-}
+import 'schedule_creation_screen.dart';
+import 'main.dart'; // Scheduleクラスをインポート
 
 class MeasurementStartScreen extends StatefulWidget {
-  final String scheduleName;
-  final int targetTime;
-
-  const MeasurementStartScreen({
-    super.key,
-    required this.scheduleName,
-    required this.targetTime,
-  });
+  const MeasurementStartScreen({super.key});
 
   @override
   State<MeasurementStartScreen> createState() => _MeasurementStartScreenState();
 }
 
 class _MeasurementStartScreenState extends State<MeasurementStartScreen> {
-  // 作成された予定を保持するリスト
-  final List<Schedule> _schedules =;
-  late Timer _timer;
-  String _currentTime = '';
+  final List<Schedule> _schedules = [];
 
-  @override
-  void initState() {
-    super.initState();
-    // 前の画面から渡された最初の予定をリストに追加
-    _schedules.add(
-      Schedule(name: widget.scheduleName, targetTime: widget.targetTime),
+  // スケジュール作成画面に遷移し、新しいスケジュールを受け取るメソッド
+  void _navigateAndAddSchedule(BuildContext context) async {
+    // Map形式でデータを受け取るように変更
+    final result = await Navigator.push<Map<String, dynamic>>(
+      context,
+      MaterialPageRoute(builder: (context) => const ScheduleCreationScreen()),
     );
 
-    // 現在時刻を初期化
-    _currentTime = _formatDateTime(DateTime.now());
-
-    // 1秒ごとに時刻を更新するタイマーを開始
-    _timer = Timer.periodic(const Duration(seconds: 1), (Timer timer) {
-      if (mounted) { // ウィジェットがまだ画面に存在するか確認
-        setState(() {
-          _currentTime = _formatDateTime(DateTime.now());
-        });
-      }
-    });
-  }
-
-  // ウィジェットが破棄されるときにタイマーを確実にキャンセルする
-  @override
-  void dispose() {
-    _timer.cancel();
-    super.dispose();
-  }
-
-  // DateTimeオブジェクトを 'HH:mm' 形式の文字列にフォーマットする
-  String _formatDateTime(DateTime dateTime) {
-    return DateFormat('HH:mm').format(dateTime);
+    // データが返ってきた場合、Scheduleオブジェクトを生成してリストに追加
+    if (result != null) {
+      final newSchedule = Schedule(
+        title: result['title'],
+        startTime: result['startTime'],
+        endTime: result['endTime'],
+      );
+      setState(() {
+        _schedules.add(newSchedule);
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('計測スタート'),
-        automaticallyImplyLeading: false, // 自動で表示される戻るボタンを非表示にする
+        title: const Text('測定開始'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children:;
+          children: [
+            const Text(
+              'スケジュール一覧',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            if (_schedules.isEmpty)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20.0),
+                  child: Text(
+                    'スケジュールがありません。\n下のボタンから作成してください。',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            // スケジュールリストの表示部分を修正
+            Expanded(
+              child: ListView.builder(
+                itemCount: _schedules.length,
+                itemBuilder: (context, index) {
+                  final schedule = _schedules[index];
+                  // 時刻を見やすいようにフォーマット
+                  final startTime = schedule.startTime.format(context);
+                  final endTime = schedule.endTime.format(context);
                   return Card(
-                    margin: const EdgeInsets.symmetric(vertical: 4.0),
                     child: ListTile(
-                      title: Text(schedule.name),
-                      trailing: Text('${schedule.targetTime} 分'),
+                      title: Text(schedule.title),
+                      // サブタイトルに開始・終了時刻を表示
+                      subtitle: Text('開始: $startTime - 終了: $endTime'),
                     ),
                   );
                 },
@@ -88,6 +81,14 @@ class _MeasurementStartScreenState extends State<MeasurementStartScreen> {
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          _navigateAndAddSchedule(context);
+        },
+        child: const Icon(Icons.add),
+        tooltip: 'スケジュールを作成',
+      ),
     );
   }
 }
+
