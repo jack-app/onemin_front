@@ -59,6 +59,15 @@ class _MeasurementStartScreenState extends State<MeasurementStartScreen> {
                   ),
                 ),
               ),
+            //履歴を確認するボタン
+            TextButton(
+              onPressed: (){},
+              child:Text("履歴を表示"),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.red,
+                alignment: Alignment.bottomCenter,
+              )
+            )
             // スケジュールリストの表示部分を修正
             Expanded(
               child: ListView.builder(
