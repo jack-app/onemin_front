@@ -67,7 +67,7 @@ class _MeasurementStartScreenState extends State<MeasurementStartScreen> {
                 foregroundColor: Colors.red,
                 alignment: Alignment.bottomCenter,
               )
-            )
+            ),
             // スケジュールリストの表示部分を修正
             Expanded(
               child: ListView.builder(
