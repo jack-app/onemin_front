@@ -11,6 +11,7 @@ class MeasurementStartScreen extends StatefulWidget {
 
 class _MeasurementStartScreenState extends State<MeasurementStartScreen> {
   final List<Schedule> _schedules = [];
+  String? isSelectedItem;
 
   // スケジュール作成画面に遷移し、新しいスケジュールを受け取るメソッド
   void _navigateAndAddSchedule(BuildContext context) async {
@@ -44,6 +45,40 @@ class _MeasurementStartScreenState extends State<MeasurementStartScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            //予定を選択するドロップダウンリスト
+            DropdownButton<String>(
+              hint:Text("予定を選択"),
+              items: _schedules.map((schedule){
+                return DropdownMenuItem<String>(
+                  value: schedule.title,
+                  child: Text(schedule.title),
+                );
+              }).toList(),
+              onChanged: (String? value){
+                setState((){
+                  isSelectedItem = value;
+                });
+                debugPrint(isSelectedItem);
+              },
+              value: isSelectedItem,
+            ),
+            //計測スタートボタン
+            Align(
+              alignment: Alignment.topCenter,
+              child: SizedBox(
+                width: 300,
+                height: 80,
+                child: OutlinedButton(
+                  onPressed: (){},
+                  style:OutlinedButton.styleFrom(
+                    foregroundColor:Colors.blue,
+                  ),
+                  child:Text("選択したスケジュールをスタート"),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            //スケジュール一覧のタイトル
             const Text(
               'スケジュール一覧',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -81,12 +116,23 @@ class _MeasurementStartScreenState extends State<MeasurementStartScreen> {
           ],
         ),
       ),
+      //履歴を確認するボタン
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child:TextButton(
+          onPressed: (){},
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.red,
+          ),
+          child:Text("履歴を表示"),
+        ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           _navigateAndAddSchedule(context);
         },
-        child: const Icon(Icons.add),
         tooltip: 'スケジュールを作成',
+        child: const Icon(Icons.add),
       ),
     );
   }
