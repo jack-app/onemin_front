@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'schedule_creation_screen.dart';
 import 'main.dart'; // Scheduleクラスをインポート
+import 'measurement_running_screen.dart';
 
 class MeasurementStartScreen extends StatefulWidget {
   const MeasurementStartScreen({super.key});
@@ -69,7 +70,25 @@ class _MeasurementStartScreenState extends State<MeasurementStartScreen> {
                 width: 300,
                 height: 80,
                 child: OutlinedButton(
-                  onPressed: (){},
+                  onPressed: (){
+                    if (isSelectedItem != null){
+                    //計測用画面running_screenに遷移
+                      final schedule = _schedules.firstWhere(
+                            (s) => s.title == isSelectedItem,
+                      );
+                      var title = schedule.title;
+                      var time_s = schedule.startTime;
+                      var time_e = schedule.endTime;
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder:(context) => MeasurementPage(
+                          selected_time_s: time_s,
+                          selected_time_e: time_e,
+                          selected_title: title,
+                        )),
+                      );
+                    }
+                  },
                   style:OutlinedButton.styleFrom(
                     foregroundColor:Colors.blue,
                   ),
