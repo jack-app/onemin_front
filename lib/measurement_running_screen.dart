@@ -150,7 +150,7 @@ class _MeasurementPageState extends State<MeasurementPage> {
               ),
             ),
             //時計の描画
-            //シンプルな丸を描く？
+            //シンプルな丸を描く
             // 秒針
             Transform.rotate(
               angle: angle, // ラジアン
