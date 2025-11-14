@@ -9,34 +9,60 @@ class MeasurementPage extends StatefulWidget {
   final TimeOfDay selected_time_s;
   final TimeOfDay selected_time_e;
 
-  final double radius;
-  final Color plateColor;
-  final Color dialColor;
-  final Color secondColor;
-
   const MeasurementPage({
     Key? key,
     required this.selected_title,
     required this.selected_time_s,
     required this.selected_time_e,
-    this.radius = 120.0,
-    this.plateColor = Colors.white,
-    this.dialColor = Colors.black,
-    this.secondColor = Colors.red,
   }):super(key: key);
 
   @override
   State<MeasurementPage> createState() => _MeasurementPageState();
 }
+//秒針UIを実装するクラス
+class ClockHand extends StatelessWidget {
+  final double angle;      // 針の角度
+  final double length;     // 長さ
+  final double thickness;  // 太さ
+  final Color color;       // 色
+
+  const ClockHand({
+    super.key,
+    required this.angle,
+    required this.length,
+    required this.thickness,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Transform.rotate(
+      angle: angle,  // 角度で回転
+      child: Container(
+        alignment: Alignment.topCenter,
+        child: Container(
+          width: thickness,
+          height: length,
+          color: color,
+        ),
+      ),
+    );
+  }
+}
+
 
 class _MeasurementPageState extends State<MeasurementPage> { 
   late DateTime startTimeS;
   late DateTime startTimeE;
   late int limit;
+  late int overtime;
 
 //Timerで表示するコメントを切り替える
   late Timer timer;
     int remaining = 0;
+    int overTime = 0;
+    double angle = 0.0;
+
   //時間超過前のテキストを設定
   String displayText = "予定終了まで：あと";
   Color displayColor = Colors.black;
@@ -49,20 +75,22 @@ class _MeasurementPageState extends State<MeasurementPage> {
    super.initState();
 
    final now = DateTime.now();
-     startTimeS = DateTime(now.year, now.month, now.day,
+   startTimeS = DateTime(now.year, now.month, now.day,
       widget.selected_time_s.hour, widget.selected_time_s.minute);
-     startTimeE = DateTime(now.year, now.month, now.day,
+   startTimeE = DateTime(now.year, now.month, now.day,
       widget.selected_time_e.hour, widget.selected_time_e.minute);
 
     // `difference`メソッドを使用して時間差を計算
-    Duration diff = startTimeE.difference(startTimeS);
-    int limit = diff.inSeconds;
+   Duration diff = startTimeE.difference(startTimeS);
+   limit = diff.inSeconds;
 
-    remaining = limit; //制限時間が過ぎたら文字を切り替える
-
-    timer = Timer.periodic(Duration(seconds: 1), (t){
+   remaining = limit;
+    //制限時間が過ぎたら文字を切り替える
+   timer = Timer.periodic(Duration(seconds: 1), (t){
       setState((){
-        remaining--;
+        remaining --;
+        //60分の1周づつ回転
+        angle += pi / 30;
       });
 
       if (remaining <= 0){
@@ -70,7 +98,6 @@ class _MeasurementPageState extends State<MeasurementPage> {
           displayText = "超過時間";
           displayColor = Colors.red; 
         });
-        t.cancel();
       }
     });
   }
@@ -81,8 +108,9 @@ class _MeasurementPageState extends State<MeasurementPage> {
     super.dispose();
   }
 
+  //時間をhour,minutes,secondsで区切り、＊＊：＊＊：＊＊の形で表示する
   String formatDuration(int seconds) {
-    final d = Duration(seconds: seconds);
+    final d = Duration(seconds: seconds.abs());
     final h = d.inHours.toString().padLeft(2, '0');
     final m = (d.inMinutes % 60).toString().padLeft(2, '0');
     final s = (d.inSeconds % 60).toString().padLeft(2, '0');
@@ -112,28 +140,27 @@ class _MeasurementPageState extends State<MeasurementPage> {
               ),
             ),
             const SizedBox(height: 10),
+            //数字で残り時間・超過時間を表示
             Text(
-              formatDuration(remaining),
-              style: const TextStyle(
+              formatDuration(remaining),  
+              textAlign: TextAlign.center,
+              style: TextStyle(
                 fontSize: 50,
+                color: displayColor,
               ),
             ),
             //時計の描画
-            //for (var i = 0; i < 60; i++)
-              //ClockMarker(
-                //index: i,
-                //radius: widget.radius,
-                //markerWidth: 1,
-                //markerHeight: 12,
-                //fontSize: 18,
-              //),
+            //シンプルな丸を描く？
             // 秒針
-            //ClockHand(
-              //angle: (2 *pi) * ( limit / 60),
-              //thickness: 1,
-              //length: 140,
-              //color: Colors.pink,
-            //),
+            Transform.rotate(
+              angle: angle, // ラジアン
+              child: ClockHand(
+                angle: 2*pi*(limit/60),
+                thickness: 2,
+                length: 140,
+                color: Colors.pink,
+              ),
+            ),
             //ストップボタン
             ElevatedButton(
               onPressed: (){},
