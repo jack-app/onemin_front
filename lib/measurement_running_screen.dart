@@ -38,7 +38,7 @@ class ClockHand extends StatelessWidget {
   Widget build(BuildContext context) {
     return Transform.rotate(
       angle: angle,  // 角度で回転
-      child: Container(
+      child: Align(
         alignment: Alignment.topCenter,
         child: Container(
           width: thickness,
@@ -149,18 +149,34 @@ class _MeasurementPageState extends State<MeasurementPage> {
                 color: displayColor,
               ),
             ),
-            //時計の描画
-            //シンプルな丸を描く
-            // 秒針
-            Transform.rotate(
-              angle: angle, // ラジアン
-              child: ClockHand(
-                angle: 2*pi*(limit/60),
-                thickness: 2,
-                length: 140,
-                color: Colors.pink,
-              ),
+            // 秒針と時計の描画
+            Center(
+              child: SizedBox(
+                width: 200,
+                height: 200,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    //丸を描く
+                    Container(
+                      width: 200,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.black, width: 3),
+                      ),
+                    ),
+                    ClockHand(
+                      angle: angle,
+                      length: 100,
+                      thickness: 2,
+                      color: Colors.red,
+                    ),
+                  ],
+                ),
+              )
             ),
+            const SizedBox(height: 30),
             //ストップボタン
             ElevatedButton(
               onPressed: (){},
