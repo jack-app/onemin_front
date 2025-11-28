@@ -174,6 +174,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => MeasurementPage(
+                      //テスト用の予定を入れておきました
                       selected_time_e: TimeOfDay(hour: 1, minute: 30),
                       selected_time_s: TimeOfDay(hour: 0, minute: 0),
                       selected_title: "テスト用予定名",
