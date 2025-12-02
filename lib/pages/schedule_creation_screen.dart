@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class ScheduleCreationScreen extends StatefulWidget {
   const ScheduleCreationScreen({super.key});
@@ -10,61 +11,32 @@ class ScheduleCreationScreen extends StatefulWidget {
 class _ScheduleCreationScreenState extends State<ScheduleCreationScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
-
-  // 選択された開始・終了時刻を保持する変数
-  TimeOfDay? _startTime;
-  TimeOfDay? _endTime;
+  final _hoursController = TextEditingController(text: '0');
+  final _minutesController = TextEditingController(text: '0');
 
   @override
   void dispose() {
     _titleController.dispose();
+    _hoursController.dispose();
+    _minutesController.dispose();
     super.dispose();
-  }
-
-  // タイムピッカーを表示して時刻を選択させる関数
-  Future<void> _selectTime(
-    BuildContext context, {
-    required bool isStart,
-  }) async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-      builder: (context, child) {
-        return MediaQuery(
-          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
-          child: child!,
-        );
-      },
-    );
-
-    // 時刻が選択されたら、対応する状態変数にセット
-    if (picked != null) {
-      setState(() {
-        if (isStart) {
-          _startTime = picked;
-        } else {
-          _endTime = picked;
-        }
-      });
-    }
   }
 
   // 保存ボタンが押されたときの処理
   void _submitForm() {
-    // バリデーションを実行
     if (_formKey.currentState!.validate()) {
-      // 開始・終了時刻が選択されているかチェック
-      if (_startTime == null || _endTime == null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('開始時刻と終了時刻を選択してください')));
-        return; // 処理を中断
+      final hours = int.tryParse(_hoursController.text) ?? 0;
+      final minutes = int.tryParse(_minutesController.text) ?? 0;
+      final totalMinutes = hours * 60 + minutes;
+      if (totalMinutes <= 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('1分以上の時間を入力してください')),
+        );
+        return;
       }
-      // タイトル、開始時刻、終了時刻をMap形式で前の画面に返す
       Navigator.pop(context, {
         'title': _titleController.text,
-        'startTime': _startTime,
-        'endTime': _endTime,
+        'duration': Duration(minutes: totalMinutes),
       });
     }
   }
@@ -95,24 +67,43 @@ class _ScheduleCreationScreenState extends State<ScheduleCreationScreen> {
                 },
               ),
               const SizedBox(height: 20),
-
-              // --- ここから追加 ---
-              // 開始時刻選択
-              ListTile(
-                title: const Text('開始時刻'),
-                subtitle: Text(_startTime?.format(context) ?? '選択されていません'),
-                trailing: const Icon(Icons.access_time),
-                onTap: () => _selectTime(context, isStart: true),
+              const Text(
+                '所要時間（タイマー）',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
-              // 終了時刻選択
-              ListTile(
-                title: const Text('終了時刻'),
-                subtitle: Text(_endTime?.format(context) ?? '選択されていません'),
-                trailing: const Icon(Icons.access_time),
-                onTap: () => _selectTime(context, isStart: false),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _hoursController,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      decoration: const InputDecoration(
+                        labelText: '時間',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _minutesController,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      decoration: const InputDecoration(
+                        labelText: '分',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-
-              // --- ここまで追加 ---
+              const SizedBox(height: 8),
+              const Text(
+                '※ 例: 1時間30分なら「時間=1」「分=30」',
+                style: TextStyle(color: Colors.black54),
+              ),
               const SizedBox(height: 20),
               ElevatedButton(onPressed: _submitForm, child: const Text('保存')),
             ],

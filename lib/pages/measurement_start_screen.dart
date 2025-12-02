@@ -1,4 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'schedule_creation_screen.dart';
 import '../models/schedule.dart'; // Scheduleクラスをインポート
 
@@ -10,7 +14,31 @@ class MeasurementStartScreen extends StatefulWidget {
 }
 
 class _MeasurementStartScreenState extends State<MeasurementStartScreen> {
-  final List<Schedule> _schedules = [];
+  List<Schedule> _schedules = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSchedules();
+  }
+
+  Future<void> _loadSchedules() async {
+    final prefs = await SharedPreferences.getInstance();
+    final stored = prefs.getStringList('schedules') ?? [];
+    final schedules = stored.map((encoded) {
+      final decoded = jsonDecode(encoded) as Map<String, dynamic>;
+      return _scheduleFromMap(decoded);
+    }).toList();
+    setState(() {
+      _schedules = schedules;
+    });
+  }
+
+  Future<void> _saveSchedules(List<Schedule> schedules) async {
+    final prefs = await SharedPreferences.getInstance();
+    final encoded = schedules.map((schedule) => jsonEncode(_scheduleToMap(schedule))).toList();
+    await prefs.setStringList('schedules', encoded);
+  }
 
   // スケジュール作成画面に遷移し、新しいスケジュールを受け取るメソッド
   void _navigateAndAddSchedule(BuildContext context) async {
@@ -23,14 +51,69 @@ class _MeasurementStartScreenState extends State<MeasurementStartScreen> {
     // データが返ってきた場合、Scheduleオブジェクトを生成してリストに追加
     if (result != null) {
       final newSchedule = Schedule(
-        title: result['title'],
-        startTime: result['startTime'],
-        endTime: result['endTime'],
+        title: result['title'] as String,
+        duration: result['duration'] as Duration,
       );
       setState(() {
-        _schedules.add(newSchedule);
+        _schedules = [..._schedules, newSchedule];
       });
+      await _saveSchedules(_schedules);
     }
+  }
+
+  Future<void> _deleteSchedule(int index) async {
+    setState(() {
+      _schedules = List.of(_schedules)..removeAt(index);
+    });
+    await _saveSchedules(_schedules);
+  }
+
+  Map<String, dynamic> _scheduleToMap(Schedule schedule) {
+    return {
+      'title': schedule.title,
+      'durationMinutes': schedule.duration.inMinutes,
+    };
+  }
+
+  Schedule _scheduleFromMap(Map<String, dynamic> map) {
+    if (map.containsKey('durationMinutes')) {
+      return Schedule(
+        title: map['title'] as String,
+        duration: Duration(minutes: (map['durationMinutes'] as num).toInt()),
+      );
+    }
+
+    final startHour = (map['startHour'] as num).toInt();
+    final startMinute = (map['startMinute'] as num).toInt();
+    final endHour = (map['endHour'] as num).toInt();
+    final endMinute = (map['endMinute'] as num).toInt();
+    final startTotal = startHour * 60 + startMinute;
+    final endTotal = endHour * 60 + endMinute;
+    var diff = endTotal - startTotal;
+    if (diff <= 0) {
+      diff += 24 * 60;
+    }
+
+    return Schedule(
+      title: map['title'] as String,
+      duration: Duration(minutes: diff),
+    );
+  }
+
+  String _formatDuration(Duration duration) {
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes.remainder(60);
+    final parts = <String>[];
+    if (hours > 0) {
+      parts.add('$hours時間');
+    }
+    if (minutes > 0) {
+      parts.add('$minutes分');
+    }
+    if (parts.isEmpty) {
+      parts.add('0分');
+    }
+    return parts.join(' ');
   }
 
   @override
@@ -63,14 +146,15 @@ class _MeasurementStartScreenState extends State<MeasurementStartScreen> {
                 itemCount: _schedules.length,
                 itemBuilder: (context, index) {
                   final schedule = _schedules[index];
-                  // 時刻を見やすいようにフォーマット
-                  final startTime = schedule.startTime.format(context);
-                  final endTime = schedule.endTime.format(context);
+                  final durationText = _formatDuration(schedule.duration);
                   return Card(
                     child: ListTile(
                       title: Text(schedule.title),
-                      // サブタイトルに開始・終了時刻を表示
-                      subtitle: Text('開始: $startTime - 終了: $endTime'),
+                      subtitle: Text('所要時間: $durationText'),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete),
+                        onPressed: () => _deleteSchedule(index),
+                      ),
                     ),
                   );
                 },

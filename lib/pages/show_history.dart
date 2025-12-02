@@ -154,12 +154,9 @@ class _ShowHistoryPageState extends State<ShowHistoryPage> {
               style: TextStyle(fontSize: 30.0),
             ),
             SizedBox(height: 10),
-            Container(
-              color: Colors.grey[700],
-              child: Container(
-                color: Colors.white,
-                margin: EdgeInsets.symmetric(vertical: 5, horizontal: 8),
-                child: Row(
+            /*
+              return Card(
+                   child: Row(
                   //横並びにする
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
@@ -201,8 +198,41 @@ class _ShowHistoryPageState extends State<ShowHistoryPage> {
                     SizedBox(width: 3),
                   ],
                 ),
+                );
+              */
+            Card(
+              child: Row(
+                //横並びにする
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  Text(
+                    "回前",
+                    textAlign: TextAlign.left,
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    "目標時間",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
+                  Spacer(),
+                  Text(
+                    "計測時間",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
+                  Spacer(),
+                  Text(
+                    "目標-計測",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(width: 3),
+                ],
               ),
             ),
+
             ListView.builder(
               shrinkWrap: true,
               itemCount: durations.length,
@@ -222,6 +252,36 @@ class _ShowHistoryPageState extends State<ShowHistoryPage> {
                         textAlign: TextAlign.center,
                         style: TextStyle(fontSize: 20),
                       );
+
+                return Card(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: <Widget>[
+                      Text(
+                        index.toString().padLeft(3, "0"),
+                        textAlign: TextAlign.left,
+                        style: TextStyle(fontSize: 20),
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        formatDuration(target),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 20),
+                      ),
+                      Spacer(),
+                      Text(
+                        formatDuration(actual),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 20),
+                      ),
+                      Spacer(),
+                      durationDiff,
+                      SizedBox(width: 3),
+                    ],
+                  ),
+                );
+
+                /*
                 return Container(
                   color: Colors.grey[700],
                   child: Container(
@@ -254,7 +314,7 @@ class _ShowHistoryPageState extends State<ShowHistoryPage> {
                       ],
                     ),
                   ),
-                );
+                );*/
               },
             ),
             SizedBox(height: 50),

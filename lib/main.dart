@@ -173,11 +173,17 @@ class _MyHomePageState extends State<MyHomePage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
+<<<<<<< HEAD
                     builder: (context) => MeasurementPage(
                       //テスト用の予定を入れておきました
                       selected_time_e: TimeOfDay(hour: 1, minute: 30),
                       selected_time_s: TimeOfDay(hour: 0, minute: 0),
                       selected_title: "テスト用予定名",
+=======
+                    builder: (context) => const MeasurementPage(
+                      selectedTitle: "テスト用予定名",
+                      duration: Duration(hours: 1, minutes: 30),
+>>>>>>> 5d01441fc990bcc3af9fb68c7070f10eae83ae08
                     ),
                   ), // start.dartに class StartPage extend なんちゃら… として実装されている場合の例
                 );
