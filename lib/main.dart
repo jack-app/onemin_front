@@ -122,7 +122,11 @@ class _MyHomePageState extends State<MyHomePage> {
                   context,
                   MaterialPageRoute(
                     builder: (context) =>
-                        ShowHistoryPage(title: "show history page"),
+                        ShowHistoryPage(
+                        title: "show history page",
+                        targetDuration: Duration(minutes: 10), // 仮の目標時間
+                        histories: [],                         // 仮の履歴リスト
+                      )
                   ), // start.dartに class StartPage extend なんちゃら… として実装されている場合の例
                 );
               },

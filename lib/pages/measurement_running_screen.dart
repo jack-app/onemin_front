@@ -46,31 +46,49 @@ class ClockHand extends StatelessWidget {
 }
 
 class _MeasurementPageState extends State<MeasurementPage> {
-  late Timer timer;
-  late int remaining;
+  late Timer _timer;
+  int elapsedSeconds = 0;
   double angle = 0.0;
-  String displayText = "予定終了まで：あと";
-  Color displayColor = Colors.black;
+  bool isRunning = true;
+
+  int get remaining {
+    final remain = widget.duration.inSeconds - elapsedSeconds;
+    return remain > 0 ? remain : 0;
+  }
+  bool get isOver => elapsedSeconds > widget.duration.inSeconds;
+
+  String get displayText => isOver ? "超過時間" : "予定終了まで：あと";
+  Color get displayColor => isOver ? Colors.red : Colors.black;
 
   @override
   void initState() {
     super.initState();
-    remaining = widget.duration.inSeconds;
-    timer = Timer.periodic(const Duration(seconds: 1), (t) {
+    _startTimer();
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!isRunning) return;
       setState(() {
-        remaining--;
-        angle += pi / 30;
-        if (remaining <= 0) {
-          displayText = "超過時間";
-          displayColor = Colors.red;
-        }
+        elapsedSeconds++;
+        angle += pi / 30; // 1秒ごとに更新・60stepで1周
       });
     });
   }
 
+  void _toggleTimer() {
+    setState(() {
+      isRunning = !isRunning;
+    });
+  }
+
+  void _finishMeasurement() {
+    Navigator.of(context).pop(Duration(seconds: elapsedSeconds));
+  }
+
   @override
   void dispose() {
-    timer.cancel();
+    _timer.cancel();
     super.dispose();
   }
 
@@ -84,31 +102,34 @@ class _MeasurementPageState extends State<MeasurementPage> {
 
   @override
   Widget build(BuildContext context) {
+    final showSeconds = !isOver ? remaining : (elapsedSeconds - widget.duration.inSeconds);
+    final stoppedText = '経過時間: ' + formatDuration(elapsedSeconds);
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
         title: Text(widget.selectedTitle),
-        automaticallyImplyLeading: false, // 戻るボタンを非表示にする
+        automaticallyImplyLeading: false,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            //コメントの表示
             Text(
-              displayText,
+              isRunning
+                  ? displayText
+                  : '計測停止中',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 30, color: displayColor),
             ),
             const SizedBox(height: 10),
-            //数字で残り時間・超過時間を表示
             Text(
-              formatDuration(remaining),
+              isRunning
+                  ? formatDuration(showSeconds)
+                  : stoppedText,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 50, color: displayColor),
+              style: TextStyle(fontSize: 50, color: Colors.blueGrey),
             ),
-            // 秒針と時計の描画
             Center(
               child: SizedBox(
                 width: 200,
@@ -138,14 +159,27 @@ class _MeasurementPageState extends State<MeasurementPage> {
             const SizedBox(height: 30),
             //ストップボタン
             ElevatedButton(
-              onPressed: () {},
+              onPressed: _toggleTimer,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red[300],
+                backgroundColor: isRunning ? Colors.red[300] : Colors.green[300],
                 foregroundColor: Colors.black,
                 shape: const StadiumBorder(),
               ),
-              child: const Text('ストップ'),
+              child: Text(isRunning ? 'ストップ' : '再開'),
             ),
+            if (!isRunning)
+              Padding(
+                padding: const EdgeInsets.only(top: 12.0),
+                child: ElevatedButton(
+                  onPressed: _finishMeasurement,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue[200],
+                    foregroundColor: Colors.black,
+                    shape: const StadiumBorder(),
+                  ),
+                  child: const Text('前の画面に戻る'),
+                ),
+              )
           ],
         ),
       ),

@@ -5,6 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'schedule_creation_screen.dart';
 import '../models/schedule.dart'; // Scheduleクラスをインポート
+import 'measurement_running_screen.dart';
+import 'show_history.dart';
 
 class MeasurementStartScreen extends StatefulWidget {
   const MeasurementStartScreen({super.key});
@@ -68,37 +70,33 @@ class _MeasurementStartScreenState extends State<MeasurementStartScreen> {
     await _saveSchedules(_schedules);
   }
 
-  Map<String, dynamic> _scheduleToMap(Schedule schedule) {
-    return {
-      'title': schedule.title,
-      'durationMinutes': schedule.duration.inMinutes,
-    };
-  }
-
-  Schedule _scheduleFromMap(Map<String, dynamic> map) {
-    if (map.containsKey('durationMinutes')) {
-      return Schedule(
-        title: map['title'] as String,
-        duration: Duration(minutes: (map['durationMinutes'] as num).toInt()),
-      );
-    }
-
-    final startHour = (map['startHour'] as num).toInt();
-    final startMinute = (map['startMinute'] as num).toInt();
-    final endHour = (map['endHour'] as num).toInt();
-    final endMinute = (map['endMinute'] as num).toInt();
-    final startTotal = startHour * 60 + startMinute;
-    final endTotal = endHour * 60 + endMinute;
-    var diff = endTotal - startTotal;
-    if (diff <= 0) {
-      diff += 24 * 60;
-    }
-
-    return Schedule(
-      title: map['title'] as String,
-      duration: Duration(minutes: diff),
+  Future<void> _openMeasurementPage(int index) async {
+    final schedule = _schedules[index];
+    final result = await Navigator.push<Duration>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MeasurementPage(
+          selectedTitle: schedule.title,
+          duration: schedule.duration,
+        ),
+      ),
     );
+    if (result != null) {
+      final his = List<MeasurementHistory>.from(schedule.histories)
+        ..add(MeasurementHistory(
+          target: schedule.duration,
+          actual: result,
+          timestamp: DateTime.now(),
+        ));
+      setState(() {
+        _schedules[index] = schedule.copyWith(histories: his);
+      });
+      await _saveSchedules(_schedules);
+    }
   }
+
+  Map<String, dynamic> _scheduleToMap(Schedule schedule) => schedule.toJson();
+  Schedule _scheduleFromMap(Map<String, dynamic> map) => Schedule.fromJson(map);
 
   String _formatDuration(Duration duration) {
     final hours = duration.inHours;
@@ -114,6 +112,18 @@ class _MeasurementStartScreenState extends State<MeasurementStartScreen> {
       parts.add('0分');
     }
     return parts.join(' ');
+  }
+
+  String _actualDurationText(Schedule s) {
+    if (s.histories.isEmpty) return '';
+    final d = s.histories.last.actual;
+    final h = d.inHours;
+    final m = d.inMinutes % 60;
+    final l = <String>[];
+    if (h > 0) l.add('${h}時間');
+    if (m > 0) l.add('${m}分');
+    if (l.isEmpty) l.add('0分');
+    return '（実績: ${l.join(' ')}）';
   }
 
   @override
@@ -150,10 +160,31 @@ class _MeasurementStartScreenState extends State<MeasurementStartScreen> {
                   return Card(
                     child: ListTile(
                       title: Text(schedule.title),
-                      subtitle: Text('所要時間: $durationText'),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: () => _deleteSchedule(index),
+                      subtitle: Text('所要時間: $durationText ${_actualDurationText(schedule)}'),
+                      onTap: () => _openMeasurementPage(index),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.history),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ShowHistoryPage(
+                                    title: schedule.title,
+                                    histories: schedule.histories,
+                                    targetDuration: schedule.duration,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete),
+                            onPressed: () => _deleteSchedule(index),
+                          ),
+                        ],
                       ),
                     ),
                   );
