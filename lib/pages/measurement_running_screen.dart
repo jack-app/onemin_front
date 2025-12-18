@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'measurement_result_screen.dart';
 
 //計測スタート画面から時刻とタイトルの情報を持ってくる
 class MeasurementPage extends StatefulWidget {
@@ -138,7 +139,17 @@ class _MeasurementPageState extends State<MeasurementPage> {
             const SizedBox(height: 30),
             //ストップボタン
             ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ResultPage(
+                      limit: limit,
+                      remaining: remaining,
+                    )
+                  )
+                );
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red[300],
                 foregroundColor: Colors.black,
