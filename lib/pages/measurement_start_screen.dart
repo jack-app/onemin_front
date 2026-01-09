@@ -166,24 +166,47 @@ class _MeasurementStartScreenState extends State<MeasurementStartScreen> {
                       title: Text(schedule.title),
                       subtitle: Text('所要時間: $durationText ${_actualDurationText(schedule)}'),
                       onTap: () => _openMeasurementPage(index),
+
                       trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.history),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => ShowHistoryPage(
-                                    title: schedule.title,
-                                    histories: schedule.histories,
-                                    targetDuration: schedule.duration,
-                                  ),
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.history),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ShowHistoryPage(
+                                  title: schedule.title,
+                                  targetDuration: schedule.duration,
+                                  // 【重要】ScheduleのhistoriesをShowHistoryPage用のResultItemに変換する
+                                  histories: schedule.histories.map((h) {
+                                    // hはおそらくMeasurementHistory型（target, actualを持っていると仮定）
+                                    return ResultItem(h.target, h.actual);
+                                  }).toList(),
                                 ),
-                              );
-                            },
-                          ),
+                              ),
+                            );
+                          },
+                        ),
+                      // trailing: Row(
+                      //   mainAxisSize: MainAxisSize.min,
+                      //   children: [
+                      //     IconButton(
+                      //       icon: const Icon(Icons.history),
+                      //       onPressed: () {
+                      //         Navigator.push(
+                      //           context,
+                      //           MaterialPageRoute(
+                      //             builder: (_) => ShowHistoryPage(
+                      //               title: schedule.title,
+                      //               histories: schedule.histories,
+                      //               targetDuration: schedule.duration,
+                      //             ),
+                      //           ),
+                      //         );
+                      //       },
+                      //     ),
                           IconButton(
                             icon: const Icon(Icons.delete),
                             onPressed: () => _deleteSchedule(index),
