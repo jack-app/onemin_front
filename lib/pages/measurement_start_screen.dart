@@ -8,6 +8,8 @@ import '../models/schedule.dart'; // Scheduleクラスをインポート
 import 'measurement_running_screen.dart';
 import 'show_history.dart';
 
+//import '../services/schedule_service.dart';
+
 class MeasurementStartScreen extends StatefulWidget {
   const MeasurementStartScreen({super.key});
 
@@ -38,7 +40,9 @@ class _MeasurementStartScreenState extends State<MeasurementStartScreen> {
 
   Future<void> _saveSchedules(List<Schedule> schedules) async {
     final prefs = await SharedPreferences.getInstance();
-    final encoded = schedules.map((schedule) => jsonEncode(_scheduleToMap(schedule))).toList();
+    final encoded = schedules
+        .map((schedule) => jsonEncode(_scheduleToMap(schedule)))
+        .toList();
     await prefs.setStringList('schedules', encoded);
   }
 

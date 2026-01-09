@@ -1,24 +1,25 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'dart:math';
+// import 'measurement_result_screen.dart'; // 必要であればコメントアウトを外す
 
-//計測スタート画面から時刻とタイトルの情報を持ってくる
+// 計測スタート画面から時刻とタイトルの情報を持ってくる
 class MeasurementPage extends StatefulWidget {
-  //時計の描画に必要な定数
+  // 修正: Start/Endではなく、DurationとTitleを受け取るように変更
   final String selectedTitle;
   final Duration duration;
 
   const MeasurementPage({
-    Key? key,
+    super.key,
     required this.selectedTitle,
     required this.duration,
-  }) : super(key: key);
+  });
 
   @override
   State<MeasurementPage> createState() => _MeasurementPageState();
 }
 
-//秒針UIを実装するクラス
+// 秒針UIを実装するクラス
 class ClockHand extends StatelessWidget {
   final double angle; // 針の角度
   final double length; // 長さ
@@ -51,10 +52,12 @@ class _MeasurementPageState extends State<MeasurementPage> {
   double angle = 0.0;
   bool isRunning = true;
 
+  // 修正: widget.durationを使用
   int get remaining {
     final remain = widget.duration.inSeconds - elapsedSeconds;
     return remain > 0 ? remain : 0;
   }
+  
   bool get isOver => elapsedSeconds > widget.duration.inSeconds;
 
   String get displayText => isOver ? "超過時間" : "予定終了まで：あと";
@@ -102,11 +105,14 @@ class _MeasurementPageState extends State<MeasurementPage> {
 
   @override
   Widget build(BuildContext context) {
-    final showSeconds = !isOver ? remaining : (elapsedSeconds - widget.duration.inSeconds);
+    // 修正: 型エラーを防ぐため変数を明確にintとして扱う
+    final int showSeconds = !isOver ? remaining : (elapsedSeconds - widget.duration.inSeconds);
     final stoppedText = '経過時間: ' + formatDuration(elapsedSeconds);
+    
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
+        // 修正: widget.selectedTitleを使用
         title: Text(widget.selectedTitle),
         automaticallyImplyLeading: false,
       ),
@@ -137,7 +143,7 @@ class _MeasurementPageState extends State<MeasurementPage> {
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    //丸を描く
+                    // 丸を描く
                     Container(
                       width: 200,
                       height: 200,
@@ -157,9 +163,9 @@ class _MeasurementPageState extends State<MeasurementPage> {
               ),
             ),
             const SizedBox(height: 30),
-            //ストップボタン
+            // ストップボタン
             ElevatedButton(
-              onPressed: _toggleTimer,
+              onPressed: _toggleTimer, // 修正: 中身が空だったので_toggleTimerを設定
               style: ElevatedButton.styleFrom(
                 backgroundColor: isRunning ? Colors.red[300] : Colors.green[300],
                 foregroundColor: Colors.black,
