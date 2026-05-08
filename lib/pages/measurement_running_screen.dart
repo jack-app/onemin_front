@@ -1,11 +1,15 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
 import 'dart:math';
-// import 'measurement_result_screen.dart'; // 必要であればコメントアウトを外す
+import 'package:flutter/material.dart';
 
-// 計測スタート画面から時刻とタイトルの情報を持ってくる
+// 通知サービスをインポート
+import 'package:onemin_front/services/simple_notification_service.dart';
+// 音やバイブレーションも連動させるためのインポート
+import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/services.dart';
+
+// --- MeasurementPage クラス (StatefulWidget) ---
 class MeasurementPage extends StatefulWidget {
-  // 修正: Start/Endではなく、DurationとTitleを受け取るように変更
   final String selectedTitle;
   final Duration duration;
 
@@ -19,12 +23,12 @@ class MeasurementPage extends StatefulWidget {
   State<MeasurementPage> createState() => _MeasurementPageState();
 }
 
-// 秒針UIを実装するクラス
+// --- 秒針UIを実装するクラス ---
 class ClockHand extends StatelessWidget {
-  final double angle; // 針の角度
-  final double length; // 長さ
-  final double thickness; // 太さ
-  final Color color; // 色
+  final double angle;
+  final double length;
+  final double thickness;
+  final Color color;
 
   const ClockHand({
     super.key,
@@ -37,7 +41,7 @@ class ClockHand extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Transform.rotate(
-      angle: angle, // 角度で回転
+      angle: angle,
       child: Align(
         alignment: Alignment.topCenter,
         child: Container(width: thickness, height: length, color: color),
@@ -46,13 +50,19 @@ class ClockHand extends StatelessWidget {
   }
 }
 
+// --- 状態を管理するクラス ---
 class _MeasurementPageState extends State<MeasurementPage> {
   late Timer _timer;
   int elapsedSeconds = 0;
   double angle = 0.0;
   bool isRunning = true;
+  bool _hasNotified = false; // 通知済みかどうかのフラグ
 
-  // 修正: widget.durationを使用
+  // ====== 修正ポイント：AudioPlayerをメンバ変数として保持 ======
+  final player = AudioPlayer();
+  final audioSourceUrl = 'alarm.mp3';
+  // ============================================================
+
   int get remaining {
     final remain = widget.duration.inSeconds - elapsedSeconds;
     return remain > 0 ? remain : 0;
@@ -66,18 +76,57 @@ class _MeasurementPageState extends State<MeasurementPage> {
   @override
   void initState() {
     super.initState();
+    // 通知サービスの初期化
+    SimpleNotificationService.initialize();
     _startTimer();
   }
 
   void _startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!isRunning) return;
+      
+      // 画面が破棄されていたらsetStateを呼ばない（エラー防止）
+      if (!mounted) return; 
+
       setState(() {
         elapsedSeconds++;
         angle += pi / 30; // 1秒ごとに更新・60stepで1周
+
+        // 時間超過時の通知ロジック
+        if (widget.duration.inSeconds > 0 && 
+            elapsedSeconds >= widget.duration.inSeconds && 
+            !_hasNotified) {
+          
+          _triggerTimeOverNotification();
+          _hasNotified = true; // 連続で通知されないようにフラグを立てる
+        }
       });
     });
   }
+
+  // ====== 修正ポイント：参考コードに合わせてメソッドを分離 ======
+  Future<void> playSound() async {
+    await player.play(AssetSource(audioSourceUrl));
+  }
+
+  Future<void> vibration() async {
+    await HapticFeedback.lightImpact();
+  }
+
+  // 通知を実行するメソッド
+  Future<void> _triggerTimeOverNotification() async {
+    playSound();
+    vibration();
+    debugPrint("Time over notification triggered!"); // デバッグログ
+
+    // 画面にローカル通知を出す
+    await SimpleNotificationService.showNotification(
+      id: 1, 
+      title: '時間超過のお知らせ',
+      body: '「${widget.selectedTitle}」の目標時間を超過しました！',
+    );
+  }
+  // ============================================================
 
   void _toggleTimer() {
     setState(() {
@@ -92,6 +141,7 @@ class _MeasurementPageState extends State<MeasurementPage> {
   @override
   void dispose() {
     _timer.cancel();
+    player.dispose(); // メモリリークを防ぐためにplayerも破棄
     super.dispose();
   }
 
@@ -105,14 +155,12 @@ class _MeasurementPageState extends State<MeasurementPage> {
 
   @override
   Widget build(BuildContext context) {
-    // 修正: 型エラーを防ぐため変数を明確にintとして扱う
     final int showSeconds = !isOver ? remaining : (elapsedSeconds - widget.duration.inSeconds);
     final stoppedText = '経過時間: ' + formatDuration(elapsedSeconds);
     
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        // 修正: widget.selectedTitleを使用
         title: Text(widget.selectedTitle),
         automaticallyImplyLeading: false,
       ),
@@ -122,17 +170,13 @@ class _MeasurementPageState extends State<MeasurementPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              isRunning
-                  ? displayText
-                  : '計測停止中',
+              isRunning ? displayText : '計測停止中',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 30, color: displayColor),
             ),
             const SizedBox(height: 10),
             Text(
-              isRunning
-                  ? formatDuration(showSeconds)
-                  : stoppedText,
+              isRunning ? formatDuration(showSeconds) : stoppedText,
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 50, color: Colors.blueGrey),
             ),
@@ -143,7 +187,6 @@ class _MeasurementPageState extends State<MeasurementPage> {
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    // 丸を描く
                     Container(
                       width: 200,
                       height: 200,
@@ -163,9 +206,8 @@ class _MeasurementPageState extends State<MeasurementPage> {
               ),
             ),
             const SizedBox(height: 30),
-            // ストップボタン
             ElevatedButton(
-              onPressed: _toggleTimer, // 修正: 中身が空だったので_toggleTimerを設定
+              onPressed: _toggleTimer,
               style: ElevatedButton.styleFrom(
                 backgroundColor: isRunning ? Colors.red[300] : Colors.green[300],
                 foregroundColor: Colors.black,
